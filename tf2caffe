@@ -1,0 +1,73 @@
+# tf2caffe
+# convert tensorflow model to caffe model
+#!/usr/bin/python
+
+import tensorflow as tf
+import numpy as np
+import scipy.io as scio
+import caffe
+
+sess = tf.Session()
+new_saver = tf.train.import_meta_graph("saved_networks/network-dqn-440000.meta")
+new_saver.restore(sess, tf.train.latest_checkpoint('saved_networks'))
+
+all_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+
+conv1 = all_vars[0]
+bias1 = all_vars[1]
+conv2 = all_vars[2]
+bias2 = all_vars[3]
+conv3 = all_vars[4]
+bias3 = all_vars[5]
+W_fc1 = all_vars[6]
+b_fc1 = all_vars[7]
+W_fc2 = all_vars[8]
+b_fc2 = all_vars[9]
+
+
+conv11 = all_vars[10]
+bias11 = all_vars[11]
+
+
+conv_w1, bias_1,conv_w2,bias_2,conv_w3,bias_3,fc1_w,fc1_b,fc2_w,fc2_b= sess.run([conv1,bias1,conv2,bias2,conv3,bias3,W_fc1,b_fc1,W_fc2,b_fc2])
+
+#scio.savemat("parameter-440000.mat", {'conv_w1':conv_w1,'conv_w2':conv_w2,'conv_w3':conv_w3,'bias_1':bias_1,'bias_2':bias_2,'bias_3':bias_3,'fc1_w':fc1_w,'fc2_w':fc2_w,'fc1_b':fc1_b,'fc2_b':fc2_b})
+
+
+conv_w11,bias_11 = sess.run([conv11,bias11])
+
+print('conv',conv_w1 - conv_w11)
+print('bias',bias_1 - bias_11)
+net = caffe.Net('parking.prototxt', caffe.TEST)
+
+data =  scio.loadmat('parameter.mat')
+
+conv_w1 = data['conv_w1']
+conv_w2 = data['conv_w2']
+conv_w3 = data['conv_w3']
+bias_1 = data['bias_1']
+bias_2 = data['bias_2']
+bias_3 = data['bias_3']
+fc1_w = data['fc1_w']
+fc2_w = data['fc2_w']
+fc1_b = data['fc1_b']
+fc2_b = data['fc2_b']
+#load parameters
+net.params['conv_1'][0].data[...] = conv_w1.transpose((3,2,0,1))
+net.params['conv_1'][1].data[...] = bias_1
+
+net.params['conv_2'][0].data[...] = conv_w2.transpose((3,2,0,1))
+net.params['conv_2'][1].data[...] = bias_2
+
+net.params['conv_3'][0].data[...] = conv_w3.transpose((3,2,0,1))
+net.params['conv_3'][1].data[...] = bias_3
+
+net.params['fc1'][0].data[...] = fc1_w.transpose((1,0))
+net.params['fc1'][1].data[...] = fc1_b
+
+net.params['fc2'][0].data[...] = fc2_w.transpose((1,0))
+net.params['fc2'][1].data[...] = fc2_b
+
+
+net.save('modelfromtf.caffemodel')
+
