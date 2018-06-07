@@ -42,7 +42,7 @@ print('bias',bias_1 - bias_11)
 # load the caffe prototxt file which has the same network structure
 net = caffe.Net('parking.prototxt', caffe.TEST)
 
-data =  scio.loadmat('parameter.mat')
+#data =  scio.loadmat('parameter.mat')
 
 conv_w1 = data['conv_w1']
 conv_w2 = data['conv_w2']
