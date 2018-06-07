@@ -8,6 +8,7 @@ import scipy.io as scio
 import caffe
 
 sess = tf.Session()
+#read your tensorflow model file
 new_saver = tf.train.import_meta_graph("saved_networks/network-dqn-440000.meta")
 new_saver.restore(sess, tf.train.latest_checkpoint('saved_networks'))
 
@@ -38,6 +39,7 @@ conv_w11,bias_11 = sess.run([conv11,bias11])
 
 print('conv',conv_w1 - conv_w11)
 print('bias',bias_1 - bias_11)
+# load the caffe prototxt file which has the same network structure
 net = caffe.Net('parking.prototxt', caffe.TEST)
 
 data =  scio.loadmat('parameter.mat')
